@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>TrueGo Testnet – Transaction</title>
+  <!-- Pi SDK: يجب فتح الصفحة داخل Pi Browser عبر PiNet -->
   <script src="https://sdk.minepi.com/pi-sdk.js"></script>
   <style>
     body{font-family:system-ui,Segoe UI,Arial,sans-serif;max-width:900px;margin:40px auto;padding:0 16px;line-height:1.7}
@@ -18,25 +19,46 @@
 
 <script>
 const log=(...a)=>{document.querySelector('#log').textContent+=a.join(' ')+"\n"}
-function ensurePi(){ if(!window.Pi){ alert("افتح الرابط داخل Pi Browser عبر PiNet."); throw new Error("Pi SDK missing"); } window.Pi.init({version:"2.0", sandbox:true}); }
-async function post(u,d){ const r=await fetch(u,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(d)}); const t=await r.text(); try{return JSON.parse(t)}catch{return{raw:t}} }
+
+function ensurePi(){
+  if(!window.Pi){
+    alert("⚠️ افتح الرابط داخل Pi Browser عبر PiNet.");
+    throw new Error("Pi SDK missing");
+  }
+  // Testnet
+  window.Pi.init({ version:"2.0", sandbox:true });
+}
+
+// عدّل هذا السطر لاحقًا ليشير إلى مشروع الـ API على Vercel
+const api = "https://truego-api.vercel.app"; // ← غيّره إلى رابط API الحقيقي عندك
+
+async function post(u,d){
+  const r=await fetch(u,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(d)});
+  const t=await r.text(); try{return JSON.parse(t)}catch{return{raw:t}}
+}
+
 document.getElementById('pay').onclick=async()=>{
   try{
     ensurePi();
     const me=await window.Pi.authenticate(["username"],{onIncompletePaymentFound:()=>{}});
     log("User:",me?.user?.username||"-");
+
     const data={amount:0.01,memo:"TrueGo test payment",metadata:{checklist:true}};
-    const api="http://truego-mtys0jbsw-moataz-madibos-projects.vercel.app"; // ← مثال: https://truego-api.vercel.app
     const cbs={
-      onReadyForServerApproval: async id=>{log("approve→",id);log(await post(api+"/api/approve",{paymentId:id}));},
-      onReadyForServerCompletion: async (id,txid)=>{log("complete→",id,txid);log(await post(api+"/api/complete",{paymentId:id,txid}));},
+      onReadyForServerApproval: async id=>{ log("approve→",id); log(await post(api+"/api/approve",{paymentId:id})); },
+      onReadyForServerCompletion: async (id,txid)=>{ log("complete→",id,txid); log(await post(api+"/api/complete",{paymentId:id,txid})); },
       onCancel:id=>log("cancel:",id),
       onError:(err,id)=>log("error:",id,err?.message||err)
     };
+
     const p=await window.Pi.createPayment(data,cbs);
     const res=await p.complete();
-    log("finished:",JSON.stringify(res)); alert("✅ تمت العملية");
-  }catch(e){ log("Exception:",e?.message||e); alert("حدث خطأ"); }
+    log("finished:",JSON.stringify(res));
+    alert("✅ تمت العملية");
+  }catch(e){
+    log("Exception:",e?.message||e);
+    alert("حدث خطأ");
+  }
 }
 </script>
 </body>
