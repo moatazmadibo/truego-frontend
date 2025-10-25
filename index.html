@@ -30,7 +30,7 @@ function ensurePi(){
 }
 
 // عدّل هذا السطر لاحقًا ليشير إلى مشروع الـ API على Vercel
-const api = "https://truego-api.vercel.app"; // ← غيّره إلى رابط API الحقيقي عندك
+const api = "https://truego-frontend-cpkrux3j0-moataz-madibos-projects.vercel.app"; // ← غيّره إلى رابط API الحقيقي عندك
 
 async function post(u,d){
   const r=await fetch(u,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(d)});
@@ -63,3 +63,4 @@ document.getElementById('pay').onclick=async()=>{
 </script>
 </body>
 </html>
+
