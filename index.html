@@ -26,7 +26,7 @@ document.getElementById('pay').onclick=async()=>{
     const me=await window.Pi.authenticate(["username"],{onIncompletePaymentFound:()=>{}});
     log("User:",me?.user?.username||"-");
     const data={amount:0.01,memo:"TrueGo test payment",metadata:{checklist:true}};
-    const api="<VERCEL_API>"; // ← مثال: https://truego-api.vercel.app
+    const api="http://truego-mtys0jbsw-moataz-madibos-projects.vercel.app"; // ← مثال: https://truego-api.vercel.app
     const cbs={
       onReadyForServerApproval: async id=>{log("approve→",id);log(await post(api+"/api/approve",{paymentId:id}));},
       onReadyForServerCompletion: async (id,txid)=>{log("complete→",id,txid);log(await post(api+"/api/complete",{paymentId:id,txid}));},
