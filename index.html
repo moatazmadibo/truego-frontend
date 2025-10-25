@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TrueGo Testnet – Transaction</title>
+  <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+  <style>
+    body{font-family:system-ui,Segoe UI,Arial,sans-serif;max-width:900px;margin:40px auto;padding:0 16px;line-height:1.7}
+    button{padding:10px 14px;border:1px solid #ddd;border-radius:10px;background:#f7f7f7;cursor:pointer}
+    pre{background:#0b1020;color:#e6edf3;padding:12px;border-radius:10px;overflow:auto;min-height:120px}
+  </style>
+</head>
+<body>
+  <h1>TrueGo Testnet – Process a Transaction</h1>
+  <button id="pay">ادفع تجربة 0.01 π</button>
+  <pre id="log"></pre>
+
+<script>
+const log=(...a)=>{document.querySelector('#log').textContent+=a.join(' ')+"\n"}
+function ensurePi(){ if(!window.Pi){ alert("افتح الرابط داخل Pi Browser عبر PiNet."); throw new Error("Pi SDK missing"); } window.Pi.init({version:"2.0", sandbox:true}); }
+async function post(u,d){ const r=await fetch(u,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(d)}); const t=await r.text(); try{return JSON.parse(t)}catch{return{raw:t}} }
+document.getElementById('pay').onclick=async()=>{
+  try{
+    ensurePi();
+    const me=await window.Pi.authenticate(["username"],{onIncompletePaymentFound:()=>{}});
+    log("User:",me?.user?.username||"-");
+    const data={amount:0.01,memo:"TrueGo test payment",metadata:{checklist:true}};
+    const api="<VERCEL_API>"; // ← مثال: https://truego-api.vercel.app
+    const cbs={
+      onReadyForServerApproval: async id=>{log("approve→",id);log(await post(api+"/api/approve",{paymentId:id}));},
+      onReadyForServerCompletion: async (id,txid)=>{log("complete→",id,txid);log(await post(api+"/api/complete",{paymentId:id,txid}));},
+      onCancel:id=>log("cancel:",id),
+      onError:(err,id)=>log("error:",id,err?.message||err)
+    };
+    const p=await window.Pi.createPayment(data,cbs);
+    const res=await p.complete();
+    log("finished:",JSON.stringify(res)); alert("✅ تمت العملية");
+  }catch(e){ log("Exception:",e?.message||e); alert("حدث خطأ"); }
+}
+</script>
+</body>
+</html>
